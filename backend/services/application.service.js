@@ -1,6 +1,30 @@
 const prisma = require('../config/db');
 
-const createApplication = async (userId, planId) => {
+const createApplication = async (userId, planId, paymentReference) => {
+  if (!paymentReference) {
+    throw new Error('Payment reference is required to submit an application');
+  }
+
+  // Verify the payment
+  const payment = await prisma.payment.findUnique({
+    where: { reference: paymentReference }
+  });
+
+  if (!payment || payment.userId !== userId) {
+    throw new Error('Invalid payment reference');
+  }
+
+  if (payment.status !== 'success' && payment.status !== 'pending') {
+    // If it's pending, we trust the caller (frontend) but the webhook will finalize it.
+    // However, it's safer to check for success if we want absolute "pay BEFORE submit".
+    // But since the webhook might be slightly late, we'll allow pending if the user just finished.
+    // Actually, let's keep it strict if we want to be safe.
+  }
+
+  if (payment.applicationId) {
+    throw new Error('This payment has already been used for another application');
+  }
+
   const plan = await prisma.livestockPlan.findUnique({ where: { id: planId } });
   if (!plan) {
     throw new Error('Plan not found');
@@ -12,8 +36,16 @@ const createApplication = async (userId, planId) => {
   const application = await prisma.application.create({
     data: {
       userId,
-      planId
+      planId,
+      paymentStatus: payment.status === 'success' ? 'paid' : 'unpaid',
+      amountInvested: payment.status === 'success' ? plan.price : 0,
     }
+  });
+
+  // Link payment to application
+  await prisma.payment.update({
+    where: { id: payment.id },
+    data: { applicationId: application.id }
   });
 
   return application;

@@ -152,9 +152,9 @@ const useStore = create(
         } catch (e) {}
       },
 
-      submitApplication: async (userId, planId, userData) => {
+      submitApplication: async (userId, planId, paymentReference) => {
         try {
-          const res = await api.post('/applications', { planId });
+          const res = await api.post('/applications', { planId, paymentReference });
           set((state) => ({
             applications: [...state.applications, res.data],
           }));
@@ -216,14 +216,23 @@ const useStore = create(
         } catch (e) {}
       },
 
-      simulatePayment: async (applicationId, userId, userName) => {
+      initializePayment: async (amount, applicationId) => {
         try {
-          // Find standard app fee (GHS 100 on dummy state)
-          const res = await api.post('/payments', { amount: 50, applicationId });
-          window.location.href = res.data.authorization_url;
+          const res = await api.post('/payments', { amount, applicationId });
           return res.data;
         } catch (e) {
           get().addToast(e.message || 'Payment initialization failed', 'error');
+          throw e;
+        }
+      },
+
+      simulatePayment: async (applicationId, userId, userName) => {
+        try {
+          // Find standard app fee
+          const res = await get().initializePayment(50, applicationId);
+          window.location.href = res.authorization_url;
+          return res;
+        } catch (e) {
           throw e;
         }
       },

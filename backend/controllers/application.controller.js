@@ -2,7 +2,8 @@ const applicationService = require('../services/application.service');
 
 const createApplication = async (req, res, next) => {
   try {
-    const application = await applicationService.createApplication(req.user.id, req.body.planId);
+    const { planId, paymentReference } = req.body;
+    const application = await applicationService.createApplication(req.user.id, planId, paymentReference);
     res.status(201).json({ success: true, data: application });
   } catch (error) {
     next(error);

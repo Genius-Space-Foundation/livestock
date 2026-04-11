@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Script from 'next/script';
 import Navbar from '@/components/Navbar';
 import useStore from '@/store/useStore';
 import { ArrowRight, ArrowLeft, CheckCircle, Clock, TrendingUp } from 'lucide-react';
@@ -11,8 +12,9 @@ import styles from './apply.module.css';
 export default function ApplyPage() {
   const params = useParams();
   const router = useRouter();
-  const { currentUser, getPlanById, submitApplication, addToast } = useStore();
+  const { currentUser, getPlanById, submitApplication, initializePayment, addToast } = useStore();
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
 
   const plan = getPlanById(params.planId);
@@ -49,12 +51,36 @@ export default function ApplyPage() {
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
+    setLoading(true);
     try {
-      const appId = await submitApplication(currentUser.id, plan.id, form);
-      addToast('Application submitted! Proceed to payment.', 'success');
-      router.push(`/payment/${appId}`);
+      // 1. Initialize payment on backend to get reference
+      const paymentData = await initializePayment(plan.price);
+      const { reference } = paymentData;
+
+      // 2. Open Paystack Inline
+      const handler = window.PaystackPop.setup({
+        key: 'pk_test_60f83e733e55d535626c0059d9afaadac0dacd9b', // Public Key
+        email: currentUser.email,
+        amount: plan.price * 100,
+        currency: 'GHS',
+        ref: reference,
+        callback: async function(response) {
+          try {
+            // 3. Payment successful, now submit the application
+            await submitApplication(currentUser.id, plan.id, response.reference);
+            router.push('/dashboard?applied=true');
+          } catch (error) {
+            setLoading(false);
+          }
+        },
+        onClose: function() {
+          setLoading(false);
+          addToast('Transaction cancelled', 'info');
+        }
+      });
+      handler.openIframe();
     } catch (e) {
-      // Error is handled in store (toast)
+      setLoading(false);
     }
   };
 
@@ -200,8 +226,8 @@ export default function ApplyPage() {
                   <button className="btn btn-ghost" onClick={() => setStep(2)}>
                     <ArrowLeft size={16} /> Back
                   </button>
-                  <button className="btn btn-primary btn-lg" onClick={handleSubmit}>
-                    Submit Application <ArrowRight size={16} />
+                  <button className="btn btn-primary btn-lg" onClick={handleSubmit} disabled={loading}>
+                    {loading ? 'Processing...' : 'Pay & Submit Application'} <ArrowRight size={16} />
                   </button>
                 </div>
               </div>
@@ -209,6 +235,9 @@ export default function ApplyPage() {
           </div>
         </div>
       </main>
+
+      {/* Paystack Inline Script */}
+      <Script src="https://js.paystack.co/v1/inline.js" strategy="lazyOnload" />
     </>
   );
 }
