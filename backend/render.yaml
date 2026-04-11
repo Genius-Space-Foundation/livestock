@@ -1,6 +1,7 @@
 services:
   - type: web
     name: livestock-backend
+    rootDirectory: backend
     env: node
     plan: free
     region: ohio
