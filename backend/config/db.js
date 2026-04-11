@@ -14,9 +14,13 @@ const prisma = new PrismaClient({
   log: ['info', 'warn', 'error'],
 });
 
-process.on('beforeExit', async () => {
-  logger.info('Prisma closing connection due to app termination...');
+const gracefulShutdown = async (signal) => {
+  logger.info(`Prisma closing connection due to ${signal}...`);
   await prisma.$disconnect();
-});
+  process.exit(0);
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 module.exports = prisma;
