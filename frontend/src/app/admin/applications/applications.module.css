@@ -1,0 +1,113 @@
+.filterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-md);
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchBox input {
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.searchBox input:focus {
+  outline: none;
+}
+
+.userCell {
+  display: flex;
+  flex-direction: column;
+}
+
+.userCell span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.section h4 {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-md);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.infoItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.9375rem;
+  color: var(--text-primary);
+}
+
+.planBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-color);
+}
+
+.planBox img {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.planBox h5 {
+  font-size: 0.9375rem;
+  margin-bottom: 2px;
+}
+
+.planBox p {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.statusBox {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.statusItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statusItem span:first-child {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}

@@ -1,0 +1,42 @@
+export const seedUsers = [
+  {
+    id: 'user-001',
+    name: 'Kwame Asante',
+    email: 'kwame@example.com',
+    phone: '+233 24 111 2222',
+    password: 'password123',
+    joinedDate: '2025-11-15',
+  },
+  {
+    id: 'user-002',
+    name: 'Ama Mensah',
+    email: 'ama@example.com',
+    phone: '+233 20 333 4444',
+    password: 'password123',
+    joinedDate: '2025-12-01',
+  },
+  {
+    id: 'user-003',
+    name: 'Kofi Boateng',
+    email: 'kofi@example.com',
+    phone: '+233 27 555 6666',
+    password: 'password123',
+    joinedDate: '2026-01-10',
+  },
+  {
+    id: 'user-004',
+    name: 'Efua Darko',
+    email: 'efua@example.com',
+    phone: '+233 50 777 8888',
+    password: 'password123',
+    joinedDate: '2026-02-20',
+  },
+  {
+    id: 'user-005',
+    name: 'Yaw Owusu',
+    email: 'yaw@example.com',
+    phone: '+233 54 999 0000',
+    password: 'password123',
+    joinedDate: '2026-03-05',
+  },
+];

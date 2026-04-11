@@ -1,0 +1,227 @@
+.page {
+  padding: var(--space-2xl) 0;
+  min-height: 80vh;
+}
+
+.container {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+/* Progress */
+.progress {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+  position: relative;
+}
+
+.progress::before {
+  content: '';
+  position: absolute;
+  top: 14px;
+  left: 15%;
+  right: 15%;
+  height: 2px;
+  background: var(--border-color);
+}
+
+.progressStep {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.progressDot {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  background: var(--bg-tertiary);
+  border: 2px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  transition: all var(--transition-base);
+}
+
+.progressActive .progressDot {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.progressStep span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.progressActive span {
+  color: var(--accent-primary);
+}
+
+/* Form */
+.formCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-xl);
+  animation: fadeInUp 0.4s ease;
+}
+
+.stepContent h2 {
+  font-size: 1.375rem;
+  margin-bottom: 4px;
+}
+
+.stepDesc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.stepActions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+}
+
+/* Plan summary */
+.planSummary {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+  text-align: center;
+}
+
+.planImage {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  margin: 0 auto var(--space-md);
+  background-color: var(--bg-card);
+}
+
+.planSummary h3 {
+  margin-bottom: var(--space-sm);
+}
+
+.planSummary p {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-md);
+}
+
+.planSummaryMeta {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-xl);
+  margin-bottom: var(--space-md);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.planSummaryMeta div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.planSummaryPrice {
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.planSummaryPrice span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.planSummaryPrice strong {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+
+.planSummaryReturn {
+  padding-top: var(--space-xs);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.planSummaryReturn span {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.planSummaryReturn strong {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.5rem;
+}
+
+/* Review */
+.reviewGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.reviewItem {
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+}
+
+.reviewItem span {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 2px;
+}
+
+.reviewItem strong {
+  font-size: 0.9375rem;
+}
+
+.reviewPrice {
+  color: var(--text-primary);
+}
+
+.reviewReturn {
+  color: var(--accent-primary);
+}
+
+@media (max-width: 480px) {
+  .reviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .stepActions {
+    flex-direction: column;
+    gap: var(--space-sm);
+  }
+
+  .progressStep span {
+    display: none;
+  }
+}

@@ -1,0 +1,89 @@
+.filterRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0 var(--space-md);
+  flex: 1;
+  max-width: 400px;
+}
+
+.searchBox input {
+  background: transparent;
+  border: none;
+  padding: 8px 0;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.searchBox input:focus {
+  outline: none;
+}
+
+.typeCell {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.planIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  border: 1px solid var(--border-color);
+}
+
+.toggleBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.toggleBtn:hover {
+  opacity: 0.8;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.actionBtn {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  border-color: var(--border-color-hover);
+}
+
+.actionBtn.delete:hover {
+  background: var(--status-danger-bg);
+  color: var(--status-danger);
+  border-color: var(--status-danger);
+}

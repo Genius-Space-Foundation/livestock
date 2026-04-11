@@ -1,0 +1,145 @@
+.layout {
+  min-height: 100vh;
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  z-index: 40;
+  display: none;
+}
+
+.sidebarWrap {
+  z-index: 50;
+}
+
+.main {
+  min-height: 100vh;
+  transition: margin-left var(--transition-base);
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  height: var(--navbar-height);
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-lg);
+  gap: var(--space-md);
+}
+
+.mobileBtn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 4px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-full);
+  padding: 6px 14px;
+  flex: 1;
+  max-width: 400px;
+  color: var(--text-muted);
+}
+
+.searchInput {
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  outline: none;
+  width: 100%;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-left: auto;
+}
+
+.notifBtn {
+  position: relative;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.notifBtn:hover {
+  color: var(--text-primary);
+  border-color: var(--border-color-hover);
+}
+
+.notifDot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 7px;
+  height: 7px;
+  background: var(--status-danger);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-tertiary);
+}
+
+.content {
+  padding: var(--space-xl) var(--space-lg);
+  animation: fadeInUp 0.4s ease;
+}
+
+@media (max-width: 768px) {
+  .overlay {
+    display: block;
+  }
+
+  .sidebarWrap {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+    z-index: 50;
+  }
+
+  .sidebarWrap.mobileOpen {
+    transform: translateX(0);
+  }
+
+  .main {
+    margin-left: 0 !important;
+  }
+
+  .mobileBtn {
+    display: flex;
+  }
+
+  .content {
+    padding: var(--space-md);
+  }
+}
