@@ -18,14 +18,21 @@ prisma.$connect()
 const app = express();
 
 // Security Middlewares
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Enable CORS
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://livestock-navy.vercel.app'
+];
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow if FRONTEND_URL matches, or if no origin (like mobile/curl), or fallback to reflecting origin correctly for credentials
-    const allowedOrigin = process.env.FRONTEND_URL;
-    if (!origin || (allowedOrigin && origin === allowedOrigin) || !allowedOrigin) {
+    // Allow if origin is in the whitelist, or if no origin (mobile/curl), or if it's production frontend
+    const isAllowed = !origin || allowedOrigins.includes(origin) || (process.env.FRONTEND_URL && origin === process.env.FRONTEND_URL);
+    if (isAllowed) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
