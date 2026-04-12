@@ -22,7 +22,8 @@ export default function AdminPlansPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const [formData, setFormData] = useState({
-    type: 'Poultry',
+    type: '',
+    image: '',
     description: '',
     duration: '4 months',
     price: 100,
@@ -55,6 +56,7 @@ export default function AdminPlansPage() {
       setEditingPlan(plan);
       setFormData({
         type: plan.type,
+        image: plan.image || '',
         description: plan.description,
         duration: plan.duration,
         price: plan.price,
@@ -64,7 +66,8 @@ export default function AdminPlansPage() {
     } else {
       setEditingPlan(null);
       setFormData({
-        type: 'Poultry',
+        type: '',
+        image: '',
         description: '',
         duration: '4 months',
         price: 100,
@@ -212,16 +215,24 @@ export default function AdminPlansPage() {
         <form className="flex flex-col gap-md">
           <div className="form-group">
             <label className="form-label">Livestock Type</label>
-            <select 
-              className="form-select" 
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="e.g. Poultry, Rabbit, Ostrich..."
               value={formData.type}
               onChange={(e) => setFormData({...formData, type: e.target.value})}
-            >
-              <option value="Poultry">Poultry</option>
-              <option value="Cattle">Cattle</option>
-              <option value="Goat">Goat</option>
-              <option value="Pig">Pig</option>
-            </select>
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Plan Image URL</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="https://example.com/image.jpg"
+              value={formData.image}
+              onChange={(e) => setFormData({...formData, image: e.target.value})}
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Description</label>

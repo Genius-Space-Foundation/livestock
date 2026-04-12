@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import Modal from '@/components/Modal';
 import useStore from '@/store/useStore';
 import api from '@/utils/api';
 import { 
@@ -15,7 +16,20 @@ import {
   Award,
   Calendar,
   ChevronRight,
-  Download
+  Download,
+  ArrowUpRight,
+  ArrowDownLeft,
+  CreditCard,
+  Banknote,
+  Phone,
+  Wifi,
+  History,
+  CheckCircle,
+  XCircle,
+  Loader,
+  Activity,
+  Zap,
+  RefreshCw
 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import styles from './dashboard.module.css';
@@ -28,14 +42,39 @@ export default function UserDashboard() {
     getUserApplications, 
     updates,
     plans,
+    myWithdrawals,
     fetchWallet,
     fetchApplications,
     fetchUpdates,
     fetchPlans,
+    fetchMyWithdrawals,
+    fetchPlatformActivities,
+    activities,
+    payments,
+    fetchMyPayments,
+    verifyPayment,
+    depositToWallet,
+    requestWalletWithdrawal,
     addToast
   } = useStore();
 
   const [loadingWithdrawal, setLoadingWithdrawal] = useState(null);
+  const [verifyingRef, setVerifyingRef] = useState(null);
+
+  // Deposit modal state
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [depositAmount, setDepositAmount] = useState('');
+  const [loadingDeposit, setLoadingDeposit] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [activeStartIndex, setActiveStartIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+
+  // Withdrawal modal state
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawPhone, setWithdrawPhone] = useState('');
+  const [withdrawNetwork, setWithdrawNetwork] = useState('MTN');
+  const [loadingWithdraw, setLoadingWithdraw] = useState(false);
 
   useEffect(() => {
     if (!currentUser) {
@@ -46,9 +85,54 @@ export default function UserDashboard() {
     fetchApplications();
     fetchWallet();
     fetchPlans();
-  }, [currentUser, router, fetchApplications, fetchWallet, fetchPlans]);
+    fetchMyWithdrawals();
+    fetchPlatformActivities();
+    fetchMyPayments();
+  }, [currentUser, router, fetchApplications, fetchWallet, fetchPlans, fetchMyWithdrawals, fetchPlatformActivities, fetchMyPayments]);
+
+  useEffect(() => {
+    if (activities.length <= 4) return;
+
+    const timer = setInterval(() => {
+      setIsTransitioning(true);
+      setActiveStartIndex((prev) => {
+        const next = prev + 1;
+        // If we reached the end of real activities (transitioning into duplicates)
+        if (next > activities.length) {
+          setIsTransitioning(false);
+          return 0;
+        }
+        return next;
+      });
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [activities.length]);
+
+  // Seamless reset logic: if we reached the index past the length, jump back to 0 instantly
+  useEffect(() => {
+    if (activeStartIndex === activities.length) {
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+        setActiveStartIndex(0);
+      }, 800); // Wait for transition to finish
+      return () => clearTimeout(timer);
+    }
+  }, [activeStartIndex, activities.length]);
 
   if (!currentUser) return null;
+
+  const handleRefreshWallet = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchWallet();
+      addToast('Wallet balance updated', 'success');
+    } catch (e) {
+      addToast('Failed to refresh wallet', 'error');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const userApps = getUserApplications(currentUser.id);
   const activeApps = userApps.filter(a => a.status === 'approved' && a.paymentStatus === 'paid');
@@ -72,6 +156,33 @@ export default function UserDashboard() {
     return Math.min(Math.round((elapsed / totalDuration) * 100), 100);
   };
 
+  const formatActivityTime = (date) => {
+    const diff = new Date() - new Date(date);
+    const mins = Math.floor(diff / 60000);
+    const hours = Math.floor(mins / 60);
+    const days = Math.floor(hours / 24);
+
+    if (mins < 1) return 'just now';
+    if (mins < 60) return `${mins}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    return `${days}d ago`;
+  };
+
+  const getVisibleActivities = () => {
+    // Return activities + the first few items duplicated at the end for seamless looping
+    if (activities.length <= 4) return activities;
+    return [...activities, ...activities.slice(0, 4)];
+  };
+
+  const handleVerifyPayment = async (ref) => {
+    setVerifyingRef(ref);
+    try {
+      await verifyPayment(ref);
+    } finally {
+      setVerifyingRef(null);
+    }
+  };
+
   const handleRequestWithdrawal = async (app) => {
     try {
       setLoadingWithdrawal(app.id);
@@ -89,6 +200,58 @@ export default function UserDashboard() {
       addToast(e.response?.data?.message || e.message || 'Failed to request withdrawal', 'error');
     } finally {
       setLoadingWithdrawal(null);
+    }
+  };
+
+  // Deposit handler
+  const handleDeposit = async (e) => {
+    e.preventDefault();
+    const amount = parseFloat(depositAmount);
+    if (!amount || amount <= 0) {
+      addToast('Please enter a valid amount', 'error');
+      return;
+    }
+    try {
+      setLoadingDeposit(true);
+      await depositToWallet(amount);
+    } catch (err) {
+      // toast handled in store
+    } finally {
+      setLoadingDeposit(false);
+    }
+  };
+
+  // Withdrawal handler
+  const handleWithdrawSubmit = async (e) => {
+    e.preventDefault();
+    const amount = parseFloat(withdrawAmount);
+    if (!amount || amount <= 0) {
+      addToast('Please enter a valid amount', 'error');
+      return;
+    }
+    if (!withdrawPhone || withdrawPhone.length < 10) {
+      addToast('Please enter a valid phone number', 'error');
+      return;
+    }
+    try {
+      setLoadingWithdraw(true);
+      await requestWalletWithdrawal(amount, withdrawPhone, withdrawNetwork);
+      setShowWithdrawModal(false);
+      setWithdrawAmount('');
+      setWithdrawPhone('');
+      setWithdrawNetwork('MTN');
+    } catch (err) {
+      // toast handled in store
+    } finally {
+      setLoadingWithdraw(false);
+    }
+  };
+
+  const getWithdrawalStatusIcon = (status) => {
+    switch (status) {
+      case 'approved': return <CheckCircle size={14} />;
+      case 'rejected': return <XCircle size={14} />;
+      default: return <Loader size={14} />;
     }
   };
 
@@ -284,24 +447,150 @@ export default function UserDashboard() {
 
             {/* Right Column: Sidebar */}
             <aside className={styles.sidebar}>
+              {/* Wallet Card */}
+              <div className={styles.walletCard}>
+                <div className={styles.walletHeader}>
+                  <div className={styles.walletIcon}>
+                    <Wallet size={20} />
+                  </div>
+                  <span className={styles.walletLabel}>Wallet Balance</span>
+                  <button 
+                    className={styles.refreshBtn} 
+                    onClick={handleRefreshWallet}
+                    disabled={isRefreshing}
+                    title="Refresh Balance"
+                  >
+                    <Loader size={12} className={isRefreshing ? styles.spin : ''} />
+                  </button>
+                </div>
+                <div className={styles.walletBalance}>
+                  <span className={styles.walletCurrency}>GHS</span>
+                  <span className={styles.walletAmount}>{wallet?.balance?.toFixed(2) || '0.00'}</span>
+                </div>
+                <div className={styles.walletStats}>
+                  <div className={styles.walletStatItem}>
+                    <ArrowDownLeft size={12} className={styles.depositIcon} />
+                    <span>Deposits: GHS {wallet?.totalDeposits?.toFixed(2) || '0.00'}</span>
+                  </div>
+                  <div className={styles.walletStatItem}>
+                    <ArrowUpRight size={12} className={styles.withdrawIcon} />
+                    <span>Withdrawals: GHS {wallet?.totalWithdrawals?.toFixed(2) || '0.00'}</span>
+                  </div>
+                </div>
+                <div className={styles.walletActions}>
+                  <button 
+                    id="deposit-btn"
+                    className={`btn ${styles.depositBtn}`}
+                    onClick={() => setShowDepositModal(true)}
+                  >
+                    <ArrowDownLeft size={16} />
+                    Deposit
+                  </button>
+                  <button 
+                    id="withdraw-btn"
+                    className={`btn ${styles.withdrawBtn}`}
+                    onClick={() => {
+                      setWithdrawPhone(currentUser.phone || '');
+                      setShowWithdrawModal(true);
+                    }}
+                  >
+                    <ArrowUpRight size={16} />
+                    Withdraw
+                  </button>
+                </div>
+              </div>
+
+              {/* Withdrawal History */}
+              {myWithdrawals && myWithdrawals.length > 0 && (
+                <div className={styles.withdrawalHistoryCard}>
+                  <div className={styles.sectionTitle}>
+                    <History size={18} />
+                    Withdrawal History
+                  </div>
+                  <div className={styles.withdrawalList}>
+                    {myWithdrawals.slice(0, 5).map((w) => (
+                      <div key={w.id} className={styles.withdrawalItem}>
+                        <div className={styles.withdrawalItemLeft}>
+                          <div className={`${styles.withdrawalStatusIcon} ${styles[`wStatus_${w.status}`]}`}>
+                            {getWithdrawalStatusIcon(w.status)}
+                          </div>
+                          <div className={styles.withdrawalItemMeta}>
+                            <span className={styles.withdrawalItemAmount}>GHS {w.amount?.toFixed(2)}</span>
+                            <span className={styles.withdrawalItemDate}>
+                              {new Date(w.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              {' · '}{w.network}
+                            </span>
+                          </div>
+                        </div>
+                        <StatusBadge status={w.status} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Syncs Section */}
+              {payments.filter(p => p.status === 'pending').length > 0 && (
+                <div className={styles.syncCard}>
+                  <div className={styles.sectionTitle}>
+                    <RefreshCw size={14} /> Pending Deposits
+                  </div>
+                  <div className={styles.syncList}>
+                    {payments.filter(p => p.status === 'pending').map(p => (
+                      <div key={p.id} className={styles.syncItem}>
+                        <div className={styles.syncInfo}>
+                          <span className={styles.syncRef}>...{p.reference.slice(-8).toUpperCase()}</span>
+                          <span className={styles.syncAmount}>GHS {p.amount.toFixed(2)}</span>
+                        </div>
+                        <button 
+                          className={styles.syncBtn}
+                          onClick={() => handleVerifyPayment(p.reference)}
+                          disabled={verifyingRef === p.reference}
+                        >
+                          {verifyingRef === p.reference ? (
+                            <Loader size={12} className={styles.spin} />
+                          ) : (
+                            'Verify'
+                          )}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <p className={styles.syncNote}>Click verify if your deposit hasn't reflected.</p>
+                </div>
+              )}
+
               <div className={styles.updatesCard}>
                 <div className={styles.sectionTitle}>
-                  <Bell size={18} />
-                  Latest Farm Updates
+                  <Zap size={18} className={styles.zapIcon} />
+                  Live Activity Feed
                 </div>
-                {updates.length > 0 ? (
-                  updates.slice(0, 3).map((update) => (
-                    <div key={update.id} className={styles.updateItem}>
-                      <div className={styles.updateHeader}>
-                        <h4>{update.title}</h4>
-                        <span>{update.date}</span>
-                      </div>
-                      <p>{update.description}</p>
+                <div className={styles.activityFeed}>
+                  {activities.length > 0 ? (
+                    <div 
+                      className={`${styles.activityTrack} ${isTransitioning ? styles.transitioning : ''}`}
+                      style={{ transform: `translateY(-${activeStartIndex * 90}px)` }}
+                    >
+                      {getVisibleActivities().map((activity, idx) => (
+                        <div key={`${activity.id}-${idx}`} className={styles.activityItem}>
+                          <div className={`${styles.activityIcon} ${styles[activity.type]}`}>
+                            {activity.type === 'deposit' ? <ArrowDownLeft size={14} /> : <ArrowUpRight size={14} />}
+                          </div>
+                          <div className={styles.activityContent}>
+                            <p className={styles.activityText}>
+                              <span className={styles.activityUser}>{activity.userName}</span>{' '}
+                              {activity.type === 'deposit' ? 'deposited' : 'withdrew'}{' '}
+                              <span className={styles.activityAmount}>GHS {activity.amount.toLocaleString()}</span>
+                            </p>
+                            <span className={styles.activityTime}>{formatActivityTime(activity.createdAt)}</span>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-muted text-sm">No updates yet.</p>
-                )}
+                  ) : (
+                    <p className="text-muted text-sm px-4 py-2">No activity recorded yet.</p>
+                  )}
+                </div>
               </div>
 
               <div className={styles.actionCard}>
@@ -316,6 +605,146 @@ export default function UserDashboard() {
         </div>
       </main>
       <Footer />
+
+      {/* ── Deposit Modal ── */}
+      <Modal
+        isOpen={showDepositModal}
+        onClose={() => { setShowDepositModal(false); setDepositAmount(''); }}
+        title="Deposit to Wallet"
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => { setShowDepositModal(false); setDepositAmount(''); }}>Cancel</button>
+            <button 
+              className="btn btn-primary" 
+              onClick={handleDeposit}
+              disabled={loadingDeposit || !depositAmount}
+            >
+              <CreditCard size={16} />
+              {loadingDeposit ? 'Processing...' : 'Pay with Paystack'}
+            </button>
+          </>
+        }
+      >
+        <div className={styles.modalIntro}>
+          <div className={styles.modalIconWrap}>
+            <ArrowDownLeft size={24} />
+          </div>
+          <p>Fund your wallet via Paystack. Your balance updates automatically after payment.</p>
+          <p className={styles.modalSubNote} style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.5rem' }}>
+            * It may take a few moments for your balance to reflect after payment. You can use the refresh button in your wallet card to sync manually.
+          </p>
+        </div>
+        <form onSubmit={handleDeposit} className={styles.modalForm}>
+          <div className="form-group">
+            <label className="form-label">Amount (GHS)</label>
+            <input
+              id="deposit-amount"
+              type="number"
+              className="form-input"
+              placeholder="e.g. 500"
+              min="1"
+              step="0.01"
+              value={depositAmount}
+              onChange={(e) => setDepositAmount(e.target.value)}
+              required
+            />
+          </div>
+          <div className={styles.quickAmounts}>
+            {[50, 100, 200, 500, 1000].map((amt) => (
+              <button
+                key={amt}
+                type="button"
+                className={`${styles.quickAmountBtn} ${parseFloat(depositAmount) === amt ? styles.quickAmountActive : ''}`}
+                onClick={() => setDepositAmount(String(amt))}
+              >
+                GHS {amt}
+              </button>
+            ))}
+          </div>
+        </form>
+      </Modal>
+
+      {/* ── Withdrawal Modal ── */}
+      <Modal
+        isOpen={showWithdrawModal}
+        onClose={() => { setShowWithdrawModal(false); setWithdrawAmount(''); setWithdrawPhone(''); }}
+        title="Request Withdrawal"
+        footer={
+          <>
+            <button className="btn btn-ghost" onClick={() => { setShowWithdrawModal(false); setWithdrawAmount(''); setWithdrawPhone(''); }}>Cancel</button>
+            <button 
+              className="btn btn-primary" 
+              onClick={handleWithdrawSubmit}
+              disabled={loadingWithdraw || !withdrawAmount || !withdrawPhone}
+            >
+              <Banknote size={16} />
+              {loadingWithdraw ? 'Submitting...' : 'Submit Request'}
+            </button>
+          </>
+        }
+      >
+        <div className={styles.modalIntro}>
+          <div className={`${styles.modalIconWrap} ${styles.modalIconWithdraw}`}>
+            <ArrowUpRight size={24} />
+          </div>
+          <p>Withdraw funds to your mobile money wallet. Requests are reviewed within 24 hours.</p>
+        </div>
+        {wallet && (
+          <div className={styles.availableBalance}>
+            <span>Available Balance</span>
+            <strong>GHS {wallet.balance?.toFixed(2) || '0.00'}</strong>
+          </div>
+        )}
+        <form onSubmit={handleWithdrawSubmit} className={styles.modalForm}>
+          <div className="form-group">
+            <label className="form-label">Amount (GHS)</label>
+            <input
+              id="withdraw-amount"
+              type="number"
+              className="form-input"
+              placeholder="e.g. 200"
+              min="1"
+              step="0.01"
+              max={wallet?.balance || 0}
+              value={withdrawAmount}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label className="form-label">Phone Number</label>
+            <div className={styles.inputWithIcon}>
+              <Phone size={16} className={styles.inputIcon} />
+              <input
+                id="withdraw-phone"
+                type="tel"
+                className="form-input"
+                placeholder="0241234567"
+                value={withdrawPhone}
+                onChange={(e) => setWithdrawPhone(e.target.value)}
+                required
+                style={{ paddingLeft: '40px' }}
+              />
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Network</label>
+            <div className={styles.networkOptions}>
+              {['MTN', 'Vodafone', 'AirtelTigo'].map((net) => (
+                <button
+                  key={net}
+                  type="button"
+                  className={`${styles.networkBtn} ${withdrawNetwork === net ? styles.networkActive : ''}`}
+                  onClick={() => setWithdrawNetwork(net)}
+                >
+                  <Wifi size={14} />
+                  {net}
+                </button>
+              ))}
+            </div>
+          </div>
+        </form>
+      </Modal>
     </>
   );
 }

@@ -16,6 +16,7 @@ import {
   ChevronRight,
   Sprout,
   Shield,
+  Banknote
 } from 'lucide-react';
 import styles from './AdminSidebar.module.css';
 
@@ -24,6 +25,7 @@ const navItems = [
   { href: '/admin/plans', icon: Beef, label: 'Manage Plans' },
   { href: '/admin/applications', icon: FileText, label: 'Applications' },
   { href: '/admin/payments', icon: CreditCard, label: 'Payments' },
+  { href: '/admin/withdrawals', icon: Banknote, label: 'Withdrawals' },
   { href: '/admin/updates', icon: Megaphone, label: 'Farm Updates' },
   { href: '/admin/activity', icon: Activity, label: 'Activity Log' },
 ];

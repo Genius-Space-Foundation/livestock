@@ -23,6 +23,8 @@ const useStore = create(
       isAdmin: false,
       token: null,
       wallet: null,
+      myWithdrawals: [],
+      activities: [],
 
       login: async (email, password) => {
         try {
@@ -86,7 +88,8 @@ const useStore = create(
           const formattedPlans = res.data.map(p => ({
             ...p,
             title: `${p.type} Plan`,
-            ...getUIMetaForPlan(p.type)
+            ...getUIMetaForPlan(p.type),
+            image: p.image || getUIMetaForPlan(p.type).image
           }));
           set({ plans: formattedPlans });
         } catch (error) {}
@@ -95,7 +98,13 @@ const useStore = create(
       addPlan: async (planData) => {
         try {
           const res = await api.post('/plans', planData);
-          const formattedPlan = { ...res.data, title: `${res.data.type} Plan`, ...getUIMetaForPlan(res.data.type) };
+          const meta = getUIMetaForPlan(res.data.type);
+          const formattedPlan = { 
+            ...res.data, 
+            title: `${res.data.type} Plan`, 
+            ...meta,
+            image: res.data.image || meta.image 
+          };
           set((state) => ({ plans: [...state.plans, formattedPlan] }));
           get().addToast(`Plan "${formattedPlan.title}" created`, 'success');
         } catch (e) {
@@ -106,7 +115,13 @@ const useStore = create(
       updatePlan: async (id, updates) => {
         try {
           const res = await api.put(`/plans/${id}`, updates);
-          const formattedPlan = { ...res.data, title: `${res.data.type} Plan`, ...getUIMetaForPlan(res.data.type) };
+          const meta = getUIMetaForPlan(res.data.type);
+          const formattedPlan = { 
+            ...res.data, 
+            title: `${res.data.type} Plan`, 
+            ...meta,
+            image: res.data.image || meta.image 
+          };
           set((state) => ({
             plans: state.plans.map((p) => (p.id === id ? formattedPlan : p)),
           }));
@@ -152,16 +167,16 @@ const useStore = create(
         } catch (e) {}
       },
 
-      submitApplication: async (userId, planId, paymentReference) => {
+      submitApplication: async (userId, planId, paymentReference = null) => {
         try {
           const res = await api.post('/applications', { planId, paymentReference });
           set((state) => ({
-            applications: [...state.applications, res.data],
+            applications: [...state.applications, res.data.data || res.data],
           }));
           get().addToast('Application submitted successfully!');
-          return res.data.id;
+          return (res.data.data || res.data).id;
         } catch (e) {
-          get().addToast(e.message || 'Failed to apply', 'error');
+          get().addToast(e.response?.data?.message || e.message || 'Failed to apply', 'error');
           throw e; // Reraise for UI catch
         }
       },
@@ -209,6 +224,13 @@ const useStore = create(
         } catch (e) {}
       },
 
+      fetchMyPayments: async () => {
+        try {
+          const res = await api.get('/payments/my');
+          set({ payments: res.data || res });
+        } catch (e) {}
+      },
+
       fetchWallet: async () => {
         try {
           const res = await api.get('/wallet');
@@ -237,12 +259,90 @@ const useStore = create(
         }
       },
 
-      confirmPayment: async (applicationId) => {
-        // This is handled automatically by Paystack Webhooks on the backend.
-        // We will just silently refetch the data when confirm is clicked locally to sync 
-        get().addToast('Syncing payment status with server...', 'success');
-        await get().fetchApplications();
-        await get().fetchPayments();
+      depositToWallet: async (amount) => {
+        try {
+          const res = await get().initializePayment(amount);
+          window.location.href = res.authorization_url;
+          return res;
+        } catch (e) {
+          get().addToast(e.message || 'Deposit initialization failed', 'error');
+          throw e;
+        }
+      },
+
+      fetchMyWithdrawals: async () => {
+        try {
+          const res = await api.get('/withdrawals/my');
+          set({ myWithdrawals: res.data || res });
+        } catch (e) {}
+      },
+
+      adminWithdrawals: [],
+
+      fetchAdminWithdrawals: async () => {
+        try {
+          const res = await api.get('/withdrawals');
+          set({ adminWithdrawals: res.data || res });
+        } catch (e) {}
+      },
+
+      approveWithdrawal: async (id) => {
+        try {
+          await api.put(`/withdrawals/${id}/approve`);
+          get().addToast('Withdrawal approved and processed', 'success');
+          await get().adminFetchWithdrawals();
+        } catch (e) {
+          get().addToast(e.message || 'Failed to approve withdrawal', 'error');
+        }
+      },
+
+      rejectWithdrawal: async (id) => {
+        try {
+          await api.put(`/withdrawals/${id}/reject`);
+          get().addToast('Withdrawal rejected', 'success');
+          await get().adminFetchWithdrawals();
+        } catch (e) {
+          get().addToast(e.message || 'Failed to reject withdrawal', 'error');
+        }
+      },
+
+      requestWalletWithdrawal: async (amount, phoneNumber, network) => {
+        try {
+          await api.post('/withdrawals', { amount, phoneNumber, network });
+          get().addToast('Withdrawal request submitted successfully', 'success');
+          await get().fetchMyWithdrawals();
+          await get().fetchWallet();
+        } catch (e) {
+          get().addToast(e.response?.data?.message || e.message || 'Withdrawal request failed', 'error');
+          throw e;
+        }
+      },
+
+      verifyPayment: async (reference) => {
+        try {
+          const res = await api.post(`/payments/verify/${reference}`);
+          if (res.success) {
+            get().addToast('Payment verified successfully!', 'success');
+            await get().fetchWallet();
+            await get().fetchApplications();
+            await get().fetchMyPayments();
+            await get().fetchPlatformActivities();
+            return { success: true };
+          } else {
+            get().addToast(res.message || 'Payment not yet cleared', 'info');
+            return { success: false };
+          }
+        } catch (e) {
+          get().addToast('Verification failed. Try again later.', 'error');
+          return { success: false };
+        }
+      },
+
+      fetchPlatformActivities: async () => {
+        try {
+          const res = await api.get('/payments/activity');
+          set({ activities: res.data || res });
+        } catch (e) {}
       },
 
       // ── Updates ──
@@ -295,6 +395,8 @@ const useStore = create(
           if (get().currentUser) {
              await get().fetchWallet();
              await get().fetchApplications();
+             await get().fetchMyWithdrawals();
+             await get().fetchPlatformActivities();
           }
 
           if (get().isAdmin) {

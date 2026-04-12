@@ -10,13 +10,26 @@ import {
   Clock, 
   XCircle,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  RefreshCw,
+  Loader
 } from 'lucide-react';
 import styles from './payments.module.css';
 
 export default function AdminPaymentsPage() {
-  const { payments, fetchPayments } = useStore();
+  const { payments, fetchPayments, verifyPayment } = useStore();
   const [search, setSearch] = useState('');
+  const [verifyingRef, setVerifyingRef] = useState(null);
+
+  const handleVerify = async (ref) => {
+    setVerifyingRef(ref);
+    try {
+      await verifyPayment(ref);
+      await fetchPayments();
+    } finally {
+      setVerifyingRef(null);
+    }
+  };
 
   const filteredPayments = payments.filter(p => 
     (p.userName?.toLowerCase() || '').includes(search.toLowerCase()) ||
@@ -94,8 +107,22 @@ export default function AdminPaymentsPage() {
                     </div>
                   </td>
                   <td>
-                    <div className="flex justify-center">
-                      <button className="btn btn-ghost btn-sm">
+                    <div className="flex justify-center gap-sm">
+                      {p.status === 'pending' && (
+                        <button 
+                          className={`${styles.actionBtn} ${styles.verifyBtn}`}
+                          onClick={() => handleVerify(p.reference)}
+                          disabled={verifyingRef === p.reference}
+                          title="Verify Status with Paystack"
+                        >
+                          {verifyingRef === p.reference ? (
+                            <Loader size={14} className="spin" />
+                          ) : (
+                            <RefreshCw size={14} />
+                          )}
+                        </button>
+                      )}
+                      <button className={styles.actionBtn} title="View Details">
                         <ExternalLink size={14} />
                       </button>
                     </div>
