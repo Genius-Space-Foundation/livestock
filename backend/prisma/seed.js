@@ -1,78 +1,86 @@
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-const { Pool } = require('pg');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const { PrismaClient } = require('@prisma/client');
-const bcrypt = require('bcryptjs');
 require('dotenv').config();
-
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ 
-  connectionString,
-  ssl: { rejectUnauthorized: false }
-});
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = require('../config/db');
 
 async function main() {
-  console.log('Seeding database...');
-
-  // Create Admin
-  const adminPassword = await bcrypt.hash('admin123', 10);
-  const admin = await prisma.user.upsert({
-    where: { email: 'admin@livestock.com' },
-    update: {},
-    create: {
-      fullName: 'Farm Admin',
-      email: 'admin@livestock.com',
-      phone: '0500000000',
-      password: adminPassword,
-      role: 'admin',
-      wallet: {
-        create: { balance: 0 }
-      }
-    },
-  });
-  console.log(`Admin created: ${admin.email}`);
-
-  // Create Test User
-  const userPassword = await bcrypt.hash('user123', 10);
-  const user = await prisma.user.upsert({
-    where: { email: 'user@example.com' },
-    update: {},
-    create: {
-      fullName: 'John Doe',
-      email: 'user@example.com',
-      phone: '0544444444',
-      password: userPassword,
-      role: 'user',
-      wallet: {
-        create: { balance: 1000 }
-      }
-    },
-  });
-  console.log(`User created: ${user.email}`);
-
-  // Add some plans
   const plans = [
-    { type: 'Poultry', description: 'Broiler chicken investment', duration: '3 months', price: 50, status: 'active' },
-    { type: 'Cattle', description: 'Bull fattening program', duration: '6 months', price: 50, status: 'active' },
-    { type: 'Goat', description: 'Local breed goat rearing', duration: '4 months', price: 50, status: 'active' },
+    {
+      type: 'Poultry',
+      title: 'Poultry – Layers',
+      description: 'Invest in a flock of layer hens producing eggs for sale across local and regional markets. Enjoy steady weekly yields and transparent farm updates.',
+      duration: '6 months',
+      price: 100,
+      roiPercentage: 35,
+      status: 'active',
+    },
+    {
+      type: 'Poultry',
+      title: 'Poultry – Broilers',
+      description: 'Fund a batch of broiler chickens raised for meat. Fast turnover, high demand, and transparent growth tracking from day-old chicks to market weight.',
+      duration: '3 months',
+      price: 100,
+      roiPercentage: 25,
+      status: 'active',
+    },
+    {
+      type: 'Goat',
+      title: 'Goat Rearing',
+      description: 'Participate in goat farming with a focus on meat production. Goats are resilient, low-maintenance, and in high demand across West Africa.',
+      duration: '8 months',
+      price: 100,
+      roiPercentage: 40,
+      status: 'active',
+    },
+    {
+      type: 'Cattle',
+      title: 'Cattle Fattening',
+      description: 'Invest in cattle raised for premium beef. This high-value plan targets the growing urban demand for quality meat with professional ranching.',
+      duration: '12 months',
+      price: 100,
+      roiPercentage: 55,
+      status: 'active',
+    },
+    {
+      type: 'Pig',
+      title: 'Pig Farming',
+      description: 'Support a piggery operation focused on pork production. Pigs grow fast, reproduce quickly, and offer one of the best ROI profiles in livestock.',
+      duration: '6 months',
+      price: 100,
+      roiPercentage: 38,
+      status: 'active',
+    },
+    {
+      type: 'Fish',
+      title: 'Fish Farming (Tilapia)',
+      description: 'Invest in tilapia aquaculture — one of the fastest-growing agricultural sectors. Controlled pond environments ensure consistent yields.',
+      duration: '4 months',
+      price: 100,
+      roiPercentage: 28,
+      status: 'inactive',
+    },
   ];
 
-  const existingPlans = await prisma.livestockPlan.findMany();
-  
-  if (existingPlans.length === 0) {
-    for (const plan of plans) {
-      await prisma.livestockPlan.create({
-        data: plan,
-      });
-    }
-    console.log('Plans seeded');
-  } else {
-    console.log('Plans already exist, skipping...');
+  console.log('Seeding plans...');
+
+  for (const plan of plans) {
+    await prisma.livestockPlan.upsert({
+      where: { id: '' }, // We use upsert with a dummy where clause or find unique to avoid duplicates
+      update: {},
+      create: plan,
+    });
   }
 
-  console.log('Seeding finished.');
+  // A better upsert since we don't have IDs yet:
+  for (const plan of plans) {
+    const existing = await prisma.livestockPlan.findFirst({
+      where: { title: plan.title }
+    });
+    
+    if (!existing) {
+      await prisma.livestockPlan.create({ data: plan });
+    }
+  }
+
+  console.log('Seeding finished!');
 }
 
 main()

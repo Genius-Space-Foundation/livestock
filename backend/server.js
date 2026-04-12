@@ -22,7 +22,15 @@ app.use(helmet());
 
 // Enable CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || '*',
+  origin: (origin, callback) => {
+    // Allow if FRONTEND_URL matches, or if no origin (like mobile/curl), or fallback to reflecting origin correctly for credentials
+    const allowedOrigin = process.env.FRONTEND_URL;
+    if (!origin || (allowedOrigin && origin === allowedOrigin) || !allowedOrigin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true
 }));
 
