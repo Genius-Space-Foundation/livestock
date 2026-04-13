@@ -16,7 +16,7 @@ export default function AdminLayout({ children }) {
 
   useEffect(() => {
     if (!currentUser || !isAdmin) {
-      router.push('/admin/login');
+      router.push('/livestockportaln');
     }
   }, [currentUser, isAdmin, router]);
 

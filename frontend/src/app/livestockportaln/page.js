@@ -1,35 +1,32 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import Navbar from '@/components/Navbar';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import useStore from '@/store/useStore';
-import { Shield, Lock, Eye, EyeOff, LogIn, Mail, ExternalLink, Loader2 } from 'lucide-react';
-import styles from './auth.module.css';
+import { Shield, Lock, Eye, EyeOff, ArrowLeft, Loader2, Mail, ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import styles from './portal.module.css';
 
-function LoginForm() {
+export default function AdminLoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, addToast } = useStore();
+  const { adminLogin, addToast } = useStore();
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     
-    const result = await login(email, password);
+    const result = await adminLogin(email, password);
     if (result.success) {
-      addToast('Welcome back!', 'success');
-      router.push(redirectUrl);
+      addToast('Authenticated successfully. Welcome back.', 'success');
+      router.push('/admin');
     } else {
-      setError(result.error || 'Invalid credentials. Please try again.');
+      setError(result.error || 'Authentication failed. Please verify your credentials.');
       setLoading(false);
     }
   };
@@ -40,22 +37,27 @@ function LoginForm() {
       <section className={styles.visualPane}>
         <img 
           src="/admin_login_bg_1776038406115.png" 
-          alt="Sustainability Branding" 
+          alt="Agriculture Branding" 
           className={styles.bgImage}
         />
         <div className={styles.overlay} />
         
         <div className={styles.visualContent}>
           <div className={styles.logo}>
-            <Shield size={32} className="text-success" />
-            <span>LIVESTOCK PLATFORM</span>
+            <div className="flex items-center gap-sm">
+              <div className="bg-success p-xs rounded-sm">
+                <Shield size={24} className="text-white" />
+              </div>
+              <span>LIVESTOCK PLATFORM</span>
+            </div>
           </div>
+          
           <h1 className={styles.tagline} style={{ color: 'var(--accent-primary)' }}>
             Empowering the Future of Sustainable Agriculture.
           </h1>
           <p className={styles.description}>
-            Join thousands of investors in building a more resilient and 
-            profitable agricultural future through smart livestock management.
+            Access the centralized management console to monitor investments, 
+            verify transactions, and grow the agricultural ecosystem.
           </p>
         </div>
       </section>
@@ -65,11 +67,11 @@ function LoginForm() {
         <div className={styles.formWrap}>
           <header className={styles.header}>
             <div className={styles.badge}>
-              <LogIn size={12} />
-              Secure Investor Portal
+              <Shield size={12} />
+              Secure Administrator Access
             </div>
             <h2 className={styles.title}>Welcome back</h2>
-            <p className={styles.subtitle}>Sign in to manage your livestock investments.</p>
+            <p className={styles.subtitle}>Please enter your credentials to access the portal.</p>
           </header>
 
           <form onSubmit={handleSubmit} className={styles.form}>
@@ -81,13 +83,13 @@ function LoginForm() {
             )}
 
             <div className={styles.inputGroup}>
-              <label className={styles.inputLabel}>Email Address</label>
+              <label className={styles.inputLabel}>Work Email</label>
               <div className={styles.inputWrapper}>
                 <Mail className={styles.inputIcon} size={18} />
                 <input
                   type="email"
                   className={styles.inputField}
-                  placeholder="you@example.com"
+                  placeholder="admin@livestock.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -125,7 +127,7 @@ function LoginForm() {
               {loading ? (
                 <>
                   <Loader2 className={styles.spinner} size={18} />
-                  <span>Signing In...</span>
+                  <span>Authenticating...</span>
                 </>
               ) : (
                 <>
@@ -137,28 +139,13 @@ function LoginForm() {
           </form>
 
           <footer className={styles.footer}>
-            <p className={styles.footerText}>
-              Don&#39;t have an account? <Link href="/register" className={styles.footerAction}>Create your investor account</Link>
-            </p>
+            <Link href="/login" className={styles.backLink}>
+              <ArrowLeft size={14} /> 
+              <span>Back to standard login</span>
+            </Link>
           </footer>
         </div>
       </section>
     </main>
   );
 }
-
-export default function LoginPage() {
-  return (
-    <>
-      <Navbar />
-      <Suspense fallback={
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-          <p>Loading...</p>
-        </div>
-      }>
-        <LoginForm />
-      </Suspense>
-    </>
-  );
-}
-

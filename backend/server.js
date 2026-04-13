@@ -9,6 +9,7 @@ const helmet = require('helmet');
 const prisma = require('./config/db');
 const logger = require('./config/logger');
 const { errorHandler } = require('./middlewares/error.middleware');
+const rateLimit = require('express-rate-limit');
 
 // (Optional) Connect explicitly to catch initial errors
 prisma.$connect()
@@ -49,8 +50,17 @@ app.use(express.json({
   }
 }));
 
+// Rate limiting for auth
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 15, // Limit each IP to 15 login requests per window
+  message: { success: false, message: 'Too many login attempts, please try again in 15 minutes' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Setup Routes
-app.use('/api/auth', require('./routes/auth.routes'));
+app.use('/api/auth', authLimiter, require('./routes/auth.routes'));
 app.use('/api/wallet', require('./routes/wallet.routes'));
 app.use('/api/plans', require('./routes/plan.routes'));
 app.use('/api/applications', require('./routes/application.routes'));
