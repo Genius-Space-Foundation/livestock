@@ -31,7 +31,8 @@ const errorHandler = (err, req, res, next) => {
   // Handle Zod validation errors
   if (err.name === 'ZodError') {
     statusCode = 400;
-    message = err.errors.map(e => e.message).join(', ');
+    const errorsList = err.issues || err.errors || [];
+    message = errorsList.map(e => e.message).join(', ') || err.message;
   }
 
   // Log to winston
