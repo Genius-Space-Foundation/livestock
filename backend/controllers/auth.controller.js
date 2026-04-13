@@ -19,7 +19,18 @@ const loginUser = async (req, res, next) => {
   }
 };
 
+const bootstrapAdmin = async (req, res, next) => {
+  try {
+    const { key } = req.query;
+    const result = await authService.bootstrapAdmin(key);
+    res.status(200).json({ success: true, ...result });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   registerUser,
-  loginUser
+  loginUser,
+  bootstrapAdmin
 };

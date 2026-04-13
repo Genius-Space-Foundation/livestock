@@ -71,7 +71,47 @@ const loginUser = async (email, password) => {
   };
 };
 
+const bootstrapAdmin = async (providedKey) => {
+  const secretKey = process.env.ADMIN_BOOTSTRAP_KEY;
+
+  if (!secretKey || providedKey !== secretKey) {
+    throw new ErrorResponse('Invalid or missing bootstrap key', 403);
+  }
+
+  const ADMIN_EMAIL = 'admin@livestock.com';
+  const ADMIN_PASS = 'AdminSecure2026!';
+
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(ADMIN_PASS, salt);
+
+  const user = await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: {
+      role: 'admin',
+      password: hashedPassword,
+      fullName: 'System Administrator'
+    },
+    create: {
+      fullName: 'System Administrator',
+      email: ADMIN_EMAIL,
+      phone: '0000000000',
+      password: hashedPassword,
+      role: 'admin',
+      wallet: {
+        create: {}
+      }
+    }
+  });
+
+  return {
+    email: user.email,
+    role: user.role,
+    message: 'Admin bootstrapped successfully'
+  };
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  bootstrapAdmin
 };
