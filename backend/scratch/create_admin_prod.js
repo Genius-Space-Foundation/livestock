@@ -3,8 +3,8 @@ const { Client } = require('pg');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
-// Production URL from your .env
-const prodUrl = "postgresql://postgres.vfcqutskgthjhggslbvg:U0Eozf0z5YYRfWJ5@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require";
+// Production URL from environment variable (Render) or local fallback
+const prodUrl = process.env.DATABASE_URL || "postgresql://postgres.vfcqutskgthjhggslbvg:U0Eozf0z5YYRfWJ5@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require";
 
 async function main() {
   const client = new Client({
