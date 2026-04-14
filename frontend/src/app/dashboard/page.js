@@ -55,10 +55,12 @@ export default function UserDashboard() {
     verifyPayment,
     depositToWallet,
     requestWalletWithdrawal,
+    reinvestApplication,
     addToast
   } = useStore();
 
   const [loadingWithdrawal, setLoadingWithdrawal] = useState(null);
+  const [loadingReinvest, setLoadingReinvest] = useState(null);
   const [verifyingRef, setVerifyingRef] = useState(null);
 
   // Deposit modal state
@@ -203,6 +205,19 @@ export default function UserDashboard() {
     }
   };
 
+  const handleReinvest = async (app) => {
+    if (!window.confirm('Are you sure you want to reinvest the total matured amount into a new plan?')) return;
+    try {
+      setLoadingReinvest(app.id);
+      await reinvestApplication(app.id);
+      fetchApplications();
+    } catch (e) {
+      // toast is handled in store
+    } finally {
+      setLoadingReinvest(null);
+    }
+  };
+
   // Deposit handler
   const handleDeposit = async (e) => {
     e.preventDefault();
@@ -293,15 +308,6 @@ export default function UserDashboard() {
               </div>
             </div>
             <div className={styles.statCard}>
-              <div className={styles.statIcon} style={{ color: 'var(--status-success)' }}>
-                <Award size={20} />
-              </div>
-              <div className={styles.statMeta}>
-                <span className={styles.statValue}>GHS {totalTargetReturn.toFixed(2)}</span>
-                <span className={styles.statLabel}>Target Maturity</span>
-              </div>
-            </div>
-            <div className={styles.statCard}>
               <div className={styles.statIcon} style={{ color: 'var(--status-info)' }}>
                 <Clock size={20} />
               </div>
@@ -371,18 +377,30 @@ export default function UserDashboard() {
                             </div>
 
                             <div className={styles.portfolioActions}>
-                              {isMatured ? (
+                                {isMatured ? (
                                 app.withdrawalStatus !== 'not_requested' ? (
-                                  <span className={styles.withdrawalStatus}>Withdrawal {app.withdrawalStatus}</span>
+                                  <span className={styles.withdrawalStatus}>Status: {app.withdrawalStatus}</span>
                                 ) : (
-                                  <button 
-                                    className="btn btn-primary" 
-                                    onClick={() => handleRequestWithdrawal(app)}
-                                    disabled={loadingWithdrawal === app.id}
-                                  >
-                                    <Download size={16} /> 
-                                    {loadingWithdrawal === app.id ? 'Requesting...' : 'Request Withdrawal (GHS ' + ((app.amountInvested || 0) + (app.expectedRoiAmount || 0)).toFixed(2) + ')'}
-                                  </button>
+                                  <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                                    <button 
+                                      className="btn btn-primary" 
+                                      style={{ flex: 1, padding: '0.5rem' }}
+                                      onClick={() => handleRequestWithdrawal(app)}
+                                      disabled={loadingWithdrawal === app.id || loadingReinvest === app.id}
+                                    >
+                                      <Download size={14} /> 
+                                      {loadingWithdrawal === app.id ? 'Wait...' : 'Withdraw'}
+                                    </button>
+                                    <button 
+                                      className="btn btn-secondary" 
+                                      style={{ flex: 1, padding: '0.5rem' }}
+                                      onClick={() => handleReinvest(app)}
+                                      disabled={loadingWithdrawal === app.id || loadingReinvest === app.id}
+                                    >
+                                      <RefreshCw size={14} /> 
+                                      {loadingReinvest === app.id ? 'Wait...' : 'Reinvest'}
+                                    </button>
+                                  </div>
                                 )
                               ) : (
                                 <p className={styles.immatureNote}>Maturing in {app.maturityDate ? Math.ceil((new Date(app.maturityDate).getTime() - new Date().getTime()) / (1000 * 3600 * 24)) : '?'} days</p>

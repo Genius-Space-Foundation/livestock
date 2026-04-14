@@ -432,6 +432,10 @@
     align-items: flex-start;
     gap: var(--space-md);
   }
+
+  .page {
+    padding-bottom: 80px; /* space for bottom nav */
+  }
 }
 
 @media (max-width: 576px) {

@@ -181,6 +181,31 @@ const useStore = create(
         }
       },
 
+      reinvestApplication: async (id) => {
+        try {
+          const res = await api.post(`/applications/${id}/reinvest`);
+          const newApp = res.data.data || res.data;
+          set((state) => ({
+            // Mark old application as reinvested
+            applications: state.applications.map(a => 
+              a.id === id ? { ...a, withdrawalStatus: 'reinvested' } : a
+            ).concat({
+              ...newApp,
+              userName: newApp.user?.fullName || get().currentUser?.name,
+              userEmail: newApp.user?.email || get().currentUser?.email,
+              userPhone: newApp.user?.phone || get().currentUser?.phone,
+              appliedDate: new Date(newApp.createdAt).toISOString().slice(0, 10)
+            })
+          }));
+          get().addToast('Plan successfully reinvested and compounded!', 'success');
+          return newApp;
+        } catch (e) {
+          get().addToast(e.response?.data?.message || e.message || 'Failed to reinvest', 'error');
+          throw e;
+        }
+      },
+
+
       approveApplication: async (id) => {
         try {
           await api.put(`/applications/${id}/status`, { status: 'approved' });

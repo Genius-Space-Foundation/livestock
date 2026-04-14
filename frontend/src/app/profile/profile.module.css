@@ -1,0 +1,133 @@
+.page {
+  padding: var(--space-2xl) 0;
+  min-height: 80vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--space-md);
+}
+
+.header {
+  margin-bottom: var(--space-2xl);
+  text-align: center;
+}
+
+.title {
+  font-size: 2.25rem;
+  margin-bottom: var(--space-sm);
+  color: var(--text-primary);
+}
+
+.subtitle {
+  color: var(--text-secondary);
+}
+
+.profileCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
+  padding: var(--space-2xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+  position: relative;
+  overflow: hidden;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  background: var(--accent-primary-glow);
+  color: var(--accent-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.userName {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.roleBadge {
+  background: var(--accent-gold-glow);
+  color: var(--accent-gold);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.detailsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-xl);
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detailLabel {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.detailValue {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  border-top: 1px solid var(--border-color);
+  padding-top: var(--space-xl);
+}
+
+.logoutBtn {
+  background: var(--status-danger-bg) !important;
+  color: var(--status-danger) !important;
+  border: 1px solid var(--status-danger) !important;
+}
+
+.logoutBtn:hover {
+  background: var(--status-danger) !important;
+  color: white !important;
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding-bottom: 80px; /* space for bottom nav */
+  }
+
+  .detailItem {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-xs);
+  }
+}

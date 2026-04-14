@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import useStore from '@/store/useStore';
 import { Menu, X, Sprout, User, LogOut } from 'lucide-react';
+import UserBottomNav from './UserBottomNav';
 import styles from './Navbar.module.css';
 
 export default function Navbar() {
@@ -27,7 +28,8 @@ export default function Navbar() {
   }
 
   return (
-    <nav className={styles.navbar}>
+    <>
+      <nav className={styles.navbar}>
       <div className={styles.inner}>
         <Link href="/" className={styles.logo}>
           <Sprout size={28} />
@@ -107,5 +109,7 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    <UserBottomNav />
+  </>
   );
 }

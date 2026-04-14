@@ -29,7 +29,7 @@ const initializePayment = async (userId, email, amount, applicationId = null, ca
       }
     );
 
-    const { authorization_url, reference } = response.data.data;
+    const { authorization_url, reference, access_code } = response.data.data;
 
     // Create pending payment record
     await prisma.payment.create({
@@ -42,7 +42,7 @@ const initializePayment = async (userId, email, amount, applicationId = null, ca
       }
     });
 
-    return { authorization_url, reference };
+    return { authorization_url, reference, access_code };
   } catch (error) {
     console.error('Error initializing payment:', error.response?.data || error.message);
     throw new Error(error.response?.data?.message || 'Error initializing payment');

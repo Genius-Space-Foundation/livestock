@@ -30,8 +30,18 @@ const updateApplicationStatus = async (req, res, next) => {
   }
 };
 
+const reinvestApplication = async (req, res, next) => {
+  try {
+    const application = await applicationService.reinvestApplication(req.params.id, req.user.id);
+    res.status(200).json({ success: true, data: application, message: 'Application reinvested successfully' });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createApplication,
   getApplications,
-  updateApplicationStatus
+  updateApplicationStatus,
+  reinvestApplication
 };
