@@ -29,7 +29,9 @@ import {
   Loader,
   Activity,
   Zap,
-  RefreshCw
+  RefreshCw,
+  Users,
+  Coins
 } from 'lucide-react';
 import StatusBadge from '@/components/StatusBadge';
 import styles from './dashboard.module.css';
@@ -287,6 +289,18 @@ export default function UserDashboard() {
               </span>
             </div>
           </header>
+
+          <div className={styles.globalStatsBanner}>
+            <div className={styles.globalStatItem}>
+              <Users size={20} className={styles.globalStatIcon} />
+              <span className={styles.globalStatText}>Joined: <strong>25,944</strong></span>
+            </div>
+            <div className={styles.globalStatDivider} />
+            <div className={styles.globalStatItem}>
+              <Coins size={20} className={styles.globalStatIcon} />
+              <span className={styles.globalStatText}>Paid: <strong>GH₵ 210,645,090</strong></span>
+            </div>
+          </div>
 
           <div className={styles.statsRow}>
             <div className={styles.statCard}>
